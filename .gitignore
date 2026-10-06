@@ -1,0 +1,17 @@
+# Generated local installation and personal data. Never distribute game assets.
+manifest.json
+save_backups/
+mod_backups/
+__pycache__/
+*.pyc
+*.exe
+*.dll
+*.bin
+*.lnk
+*.building
+*_results.json
+test_ui.ps1
+Live-Control.before-status-ui.ps1
+cleanup_receipt.json
+publication_receipt.json
+*.zip
