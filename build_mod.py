@@ -5,10 +5,13 @@ import hashlib
 import json
 import shutil
 import zipfile
+import sys
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(sys.executable).resolve().parent if getattr(sys,'frozen',False) else Path(__file__).resolve().parent
+ASSETS = Path(getattr(sys,'_MEIPASS',ROOT))
 SUPPORTED_SHA256 = 'ea9d367b89aa879fc013fdd790be46e44b89b6c4515f29dc4ebddddf2d0340dd'
 GAME = ORIGINAL = MOD = CONFIG = None
 TARGET = 'all/systems.lua'
@@ -21,10 +24,18 @@ def digest(p):
     return h.hexdigest()
 
 def wrapper():
-    return (ROOT/'systems_wrapper.lua').read_bytes()
+    return (ASSETS/'systems_wrapper.lua').read_bytes()
 
 def main():
     global GAME, ORIGINAL, MOD, CONFIG
+    if len(sys.argv)==1 and getattr(sys,'frozen',False):
+        script=ROOT/'Install.ps1'
+        if not script.exists():raise SystemExit('Please extract the entire ZIP first: Install.ps1 is missing.')
+        ps=Path(__import__('os').environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0/powershell.exe'
+        raise SystemExit(subprocess.call([str(ps),'-NoProfile','-ExecutionPolicy','Bypass','-File',str(script)]))
+    if sys.argv[1:]==['--self-test']:
+        print(json.dumps({'frozen':bool(getattr(sys,'frozen',False)),'python':sys.version,'data_directory':str(ROOT),'bundled_wrapper_sha256':hashlib.sha256(wrapper()).hexdigest()}))
+        return
     parser=argparse.ArgumentParser(description='Build KR6 Live Control from your own installed game. No game files are distributed.')
     parser.add_argument('--game-dir',required=True,type=Path,help='Folder containing Kingdom Rush Genesis.exe')
     parser.add_argument('--check',action='store_true',help='Validate game compatibility without installing')

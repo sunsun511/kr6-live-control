@@ -1,5 +1,13 @@
 KR6 Live Control v4.1 — 中文使用与分享说明
 
+【普通用户请下载免 Python 版】
+https://github.com/sunsun511/kr6-live-control/releases
+文件名：KR6-Live-Control-v4.1-Windows-x64.zip
+完整解压 → 双击 KR6-Installer.exe → 选择游戏目录 → 安装完成 → Launch.cmd。
+已包含 Python 运行环境，不用安装 Python、Docker、WSL 或 pip 依赖。
+保留整个解压文件夹，不能只拿走一个 EXE；控制面板使用 Windows 自带组件。
+GitHub 的 Code → Download ZIP 是源码版，不含打包的安装器。
+
 一、这是什么
 这是 Windows Steam 版 Kingdom Rush 6: Genesis TD 的非官方本地修改器。
 分享包只包含原创工具，不包含游戏。每个人都需要自己的游戏，并在自己的电脑上安装一次。
@@ -7,8 +15,8 @@ KR6 Live Control v4.1 — 中文使用与分享说明
 二、电脑需要什么
 1. 能正常运行原游戏的 64 位 Windows 电脑。
 2. Windows PowerShell 5.1 及系统 Windows Forms/.NET 桌面组件。
-3. 安装、升级时需要 Python 3.10 或更新版本，安装 Python 时启用 Add Python to PATH。
-   不需要 pip 安装第三方库；安装完成后，日常打开面板不需要运行 Python。
+3. 免 Python 版无需额外运行环境，内置 CPython 3.10.11 x64。
+   只有源码版安装、升级需要自行安装 Python 3.10+ 并启用 PATH。
 4. 游戏和工具文件夹都需要写入权限。建议预留至少 3 GB，存档和累积备份另算。
 5. 不需要 AI 模型、CUDA、Cheat Engine 或额外安装 Lua。
 
@@ -25,7 +33,7 @@ ea9d367b89aa879fc013fdd790be46e44b89b6c4515f29dc4ebddddf2d0340dd
 四、第一次安装
 1. 先确认原游戏可以正常运行，然后正常退出游戏。
 2. 在 Steam 库中右键游戏 → 管理 → 浏览本地文件，找到游戏安装位置。
-3. 双击工具文件夹里的 Install.cmd。
+3. 双击工具文件夹里的 KR6-Installer.exe 或 Install.cmd。
 4. 选择直接包含 Kingdom Rush Genesis.exe 的那一层文件夹。
    不要选择 Steam 总目录，也不要选择存档文件夹。
 5. 等待提示安装完成。
@@ -65,11 +73,14 @@ Steam 普通“开始游戏”通常启动原版，不会自动应用此 MOD。
 已经获得并保存的经验不会因为关闭工具自动撤销。
 
 七、升级、备份与恢复原版
-升级前正常退出游戏。在工具目录打开终端，执行：
+升级前正常退出游戏，再次双击 KR6-Installer.exe 或 Install.cmd，自动备份旧 MOD 并升级。
+独立版也可在工具目录打开终端，执行：
+KR6-Installer.exe --game-dir "你的游戏安装目录" --upgrade
+源码版对应命令：
 python build_mod.py --game-dir "你的游戏安装目录" --upgrade
 也可以把 python 换成 py -3。
 升级会验证新文件，备份旧 MOD 和安装记录到 mod_backups，再替换 MOD。
-首次安装不要加 --upgrade 也可以；重复双击 Install.cmd 不会自动覆盖旧 MOD。
+命令行首次安装不加 --upgrade；图形入口会自动判断安装或升级。
 
 原版和 MOD 共用存档。安装及通过面板启动 MOD 时会备份现有存档，
 备份在工具目录的 save_backups 中；直接双击游戏 EXE 不经过面板启动备份。
@@ -78,8 +89,9 @@ python build_mod.py --game-dir "你的游戏安装目录" --upgrade
 想玩原版，可关闭 MOD 后从面板点“启动原版”或正常通过 Steam 启动。
 
 八、发给别人时发什么
-推荐直接分享干净的源码 ZIP，或者将原创源码和文档上传 GitHub。
-接收者自己解压、安装 Python、运行 Install.cmd 并选择自己的游戏目录。
+推荐直接分享 Releases 的免 Python ZIP，接收者无需安装 Python。
+不要把安装后的文件夹重新打包；直接分享发布的干净 ZIP 即可。
+也可以分享源码，但源码版接收者仍需要安装 Python。
 
 不要分享安装后的整个工具文件夹或游戏目录。分享包不要包含：
 - 原版 EXE、生成的 MOD EXE、游戏 DLL、游戏资源或提取的原版脚本。
@@ -89,12 +101,14 @@ python build_mod.py --game-dir "你的游戏安装目录" --upgrade
 - mod_backups：完整旧版 MOD。
 - 本机快捷方式、状态文件、配置及临时文件。
 
-保留原创 .py、.ps1、.cmd、systems_wrapper.lua、README.md、本说明和 LICENSE 即可。
+源码分享保留原创 .py、.ps1、.cmd、systems_wrapper.lua、README.md、本说明和 LICENSE。
+免 Python 包包含可分享的 KR6-Installer.exe、启动脚本、说明和第三方许可证。
+KR6-Installer.exe 不含游戏本体，与生成的游戏 MOD EXE 是两种不同文件。
 测试脚本可附带，但使用者正常安装和玩游戏不需要运行测试。
 原创代码使用 MIT License，分享时保留许可证和署名；原游戏资源不在该许可内。
 
 九、常见问题
-找不到 Python：检查 py -3 --version 或 python --version，确认版本至少 3.10。
+找不到 Python：优先改用 Release 免 Python 版；源码版需确认 Python 至少 3.10。
 找不到 manifest.json：先在本机安装，不要拿别人的 manifest.json 来替代。
 Unsupported game build：当前游戏版本不匹配，需等待重新适配。
 一直显示“—”：确认启动新版 MOD、进入关卡、恢复运行，并关闭其他旧面板。

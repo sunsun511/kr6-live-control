@@ -15,3 +15,10 @@ Live-Control.before-status-ui.ps1
 cleanup_receipt.json
 publication_receipt.json
 *.zip
+.packaging-venv/
+build/
+dist/
+portable_qa/
+*.spec
+github_published.png
+portable_build.log

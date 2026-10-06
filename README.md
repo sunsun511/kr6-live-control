@@ -4,13 +4,16 @@
 
 > 本仓库仅包含原创修改器源码与本地安装工具，不包含游戏 EXE、DLL、原版脚本或存档。需要自行安装游戏。与游戏开发商及发行商无隶属关系。
 
-第一次使用可先看 [使用说明.txt](使用说明.txt)。网盘分享时请发送干净的源码 ZIP，让接收者在自己的电脑上安装。
+**普通用户推荐下载 [Releases 中的 Windows x64 免 Python 版](https://github.com/sunsun511/kr6-live-control/releases)**，完整解压后双击 `KR6-Installer.exe` 选择游戏目录，安装后双击 `Launch.cmd`。无需安装 Python、Docker 或第三方 Python 库。
+
+第一次使用可先看 [使用说明.txt](使用说明.txt)。仓库的 Code → Download ZIP 是源码版，运行源码安装器仍需要 Python；Release 中的 `KR6-Live-Control-v4.1-Windows-x64.zip` 才是包含独立安装器的成品。
 
 ## 环境与放置位置
 
 - 使用能正常运行本游戏的 **64 位 Windows 电脑**。当前工具是 Windows 桌面版，未适配 Android、macOS、Linux 或 Steam Deck。
 - 控制面板使用系统的 `powershell.exe`、Windows Forms 和 .NET 桌面组件；按 Windows PowerShell 5.1 环境制作，不需要另装 PowerShell 7。
-- 安装、升级时需要 Python 3.10+，仅使用标准库，**不用 pip 安装依赖**。安装好以后，平时打开面板不调用 Python。
+- **免 Python 版**：安装器已包含 CPython 3.10.11 x64，无需自行配置 Python。仍使用 Windows 自带 PowerShell/.NET 显示面板。
+- **源码版**：安装、升级需要 Python 3.10+，仅使用标准库，不用 pip 安装依赖；日常打开面板不调用 Python。
 - 不需要 CUDA、AI 模型、显卡计算环境、Cheat Engine 或另外安装 Lua。游戏所需运行环境以原版能够正常启动为准。
 - 工具目录和游戏目录都需要写入权限。首次会额外生成约 1.2 GB 的 MOD EXE；升级还会保留旧 MOD，另需备份空间。建议预留至少 3 GB 空间，并另外考虑存档和累积备份。
 - 修改器本身离线工作；Steam 登录、授权及游戏自身联网要求仍由游戏决定。
@@ -44,6 +47,17 @@
 
 ## 安装
 
+### 普通用户：免 Python 版
+
+1. 从 Releases 下载 `KR6-Live-Control-v4.1-Windows-x64.zip`，完整解压到可写目录。
+2. 正常退出游戏，双击 `KR6-Installer.exe`（或 `Install.cmd`）。
+3. 选择包含 `Kingdom Rush Genesis.exe` 的目录；安装器自动判断首次安装或升级，升级保留旧 MOD 备份。
+4. 等待完成，双击 `Launch.cmd`，在面板里点“启动新版 MOD”。
+
+这是便携文件夹，不是只复制一个 EXE：请保留随包的 `.ps1`、`.cmd` 和说明文件。安装器内置 Python 与补丁，不包含游戏本体。无需 Docker、WSL 或管理员级后台服务。当前 EXE 未做商业代码签名。
+
+### 开发者：源码版
+
 1. 从本仓库 **Code → Download ZIP** 下载并解压到有写入权限的文件夹。不要直接在 ZIP 内运行。
 2. 安装 Python 3.10+，确保 `py -3` 或 `python` 命令可用。
 3. 正常退出游戏，双击 **Install.cmd**，选择包含 `Kingdom Rush Genesis.exe` 的游戏安装目录。
@@ -62,7 +76,7 @@ py -3 build_mod.py --game-dir "E:\SteamLibrary\steamapps\common\Kingdom Rush Gen
 py -3 build_mod.py --game-dir "E:\SteamLibrary\steamapps\common\Kingdom Rush Genesis" --check
 ```
 
-生成的 MOD 已存在时，安装器默认不会覆盖。升级时先正常退出游戏，再运行 `python build_mod.py --game-dir "游戏目录" --upgrade`。安装器完成新文件验证后，备份旧 MOD 和安装清单到 `mod_backups/`，再替换 MOD；原版 EXE 不变。
+图形安装入口会自动检测已存在的 MOD 并执行带备份的升级。命令行安装默认不覆盖；升级用 `python build_mod.py --game-dir "游戏目录" --upgrade`。独立版可把 `python build_mod.py` 换为 `KR6-Installer.exe`。原版 EXE 不变。
 
 ## 使用
 
@@ -87,7 +101,7 @@ py -3 build_mod.py --game-dir "E:\SteamLibrary\steamapps\common\Kingdom Rush Gen
 
 ## 分享到 GitHub 或网盘
 
-推荐分享本项目的源码 ZIP，或将原创源码和文档放入 GitHub 仓库。接收者需要自己的兼容游戏安装，并在本机运行一次 `Install.cmd`。
+推荐普通用户分享 Releases 的免 Python ZIP；开发者可以分享源码。接收者都需要自己的兼容游戏安装，并在本机运行一次安装器。`KR6-Installer.exe` 是可分享的原创安装器，与包含游戏内容的 `Kingdom Rush Genesis Live V4 Mod.exe` 不同。
 
 **不要直接压缩安装后的整个文件夹或游戏目录。** 分享包中不应包含：
 
@@ -102,7 +116,7 @@ py -3 build_mod.py --game-dir "E:\SteamLibrary\steamapps\common\Kingdom Rush Gen
 
 | 现象 | 处理 |
 | --- | --- |
-| 安装提示找不到 Python | 安装 Python 3.10+ 并启用 PATH，重新打开安装器；终端检查 `py -3 --version` 或 `python --version` |
+| 安装提示找不到 Python | 推荐改用 Release 免 Python 版并完整解压；若坚持用源码版，则安装 Python 3.10+ |
 | 找不到游戏 EXE | 重新选择直接包含 `Kingdom Rush Genesis.exe` 的游戏目录 |
 | Unsupported game build | 原版哈希不匹配当前适配版本。停止安装，等待适配；不要删除或绕过版本校验 |
 | MOD already exists | 不必重复安装；升级时退出游戏并使用上文的 `--upgrade` 命令 |
@@ -126,6 +140,8 @@ py -3 build_mod.py --game-dir "E:\SteamLibrary\steamapps\common\Kingdom Rush Gen
 安装后，开发者可运行 `python test_power.py` 和 `python test_speed.py`。测试只读取已安装游戏代码，不修改存档；无游戏时无法运行集成测试。可通过 `KR6_GAME_DIR` 环境变量指定测试用游戏目录。
 
 ## 实现
+
+开发者构建便携包：在 Windows x64 的独立 Python 环境安装 `pyinstaller==6.22.3`，执行 `python build_portable.py`。输出在 `dist/`，包含 ZIP 和 SHA-256。已用 CPython 3.10.11 x64 构建；不需要用户安装此构建环境。第三方运行库许可证随便携包提供。
 
 `build_mod.py` 保留原生启动前缀，复制未修改 ZIP 成员的压缩数据，只包装 `all/systems.lua`。安装时把原系统模块保存在本地生成的 EXE 内。补丁在关卡更新期间读取本地配置；速度通过分段调用原模拟循环实现；金币指令带有关卡会话标识，避免重复执行。
 
