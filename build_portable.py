@@ -3,7 +3,7 @@ import hashlib,json,shutil,subprocess,sys,zipfile
 from pathlib import Path
 from importlib.metadata import distribution,version
 ROOT=Path(__file__).resolve().parent
-OUT=ROOT/'dist'/'KR6-Live-Control-v4.1-portable'
+OUT=ROOT/'dist'/'KR6-Live-Control-v4.1.1-portable'
 OUT.mkdir(parents=True,exist_ok=True)
 subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onefile','--console','--name','KR6-Installer','--add-data',str(ROOT/'systems_wrapper.lua')+';.',str(ROOT/'build_mod.py')],cwd=ROOT,check=True)
 shutil.copy2(ROOT/'dist/KR6-Installer.exe',OUT/'KR6-Installer.exe')
@@ -16,7 +16,7 @@ for f in dist.files:
     if f.name in ('COPYING.txt','LICENSE','LICENSE.txt'):
         shutil.copy2(dist.locate_file(f),notices/('PyInstaller-'+f.name))
 (OUT/'THIRD_PARTY_NOTICES.txt').write_text('Bundled CPython runtime: '+sys.version+'\nPyInstaller '+version('pyinstaller')+' with bootloader distribution exception.\nSee licenses/ for bundled runtime and packager notices.\nThe MOD source is MIT licensed; no game files are included.\n',encoding='utf-8')
-archive=ROOT/'dist'/('KR6-Live-Control-v4.1-Windows-x64.zip')
+archive=ROOT/'dist'/('KR6-Live-Control-v4.1.1-Windows-x64.zip')
 with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED) as z:
     for f in sorted(OUT.rglob('*')):
         if f.is_file():z.write(f,OUT.name+'/'+f.relative_to(OUT).as_posix())

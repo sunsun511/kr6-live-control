@@ -4,7 +4,7 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 $manifest = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $form = New-Object System.Windows.Forms.Form
-$form.Text = '王国保卫战：实时控制 v4.1'
+$form.Text = '王国保卫战：实时控制 v4.1.1'
 $form.Size = New-Object System.Drawing.Size(650,910)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'

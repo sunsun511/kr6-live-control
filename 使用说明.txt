@@ -1,8 +1,8 @@
-KR6 Live Control v4.1 — 中文使用与分享说明
+KR6 Live Control v4.1.1 — 中文使用与分享说明
 
 【普通用户请下载免 Python 版】
 https://github.com/sunsun511/kr6-live-control/releases
-文件名：KR6-Live-Control-v4.1-Windows-x64.zip
+文件名：KR6-Live-Control-v4.1.1-Windows-x64.zip
 完整解压 → 双击 KR6-Installer.exe → 选择游戏目录 → 安装完成 → Launch.cmd。
 已包含 Python 运行环境，不用安装 Python、Docker、WSL 或 pip 依赖。
 保留整个解压文件夹，不能只拿走一个 EXE；控制面板使用 Windows 自带组件。
@@ -20,15 +20,17 @@ GitHub 的 Code → Download ZIP 是源码版，不含打包的安装器。
 4. 游戏和工具文件夹都需要写入权限。建议预留至少 3 GB，存档和累积备份另算。
 5. 不需要 AI 模型、CUDA、Cheat Engine 或额外安装 Lua。
 
-当前只适配 Steam app 4259190 / build 25661788。
+当前适配游戏 1.01.008，Steam app 4259190 / build 25752506。
+2026-10-07 兼容更新：功能不变；击杀金币保留新版难度系数及取整规则。
+旧 build 25661788 请使用历史 v4.1。升级时退出游戏，在新版文件夹运行安装器。
 原版 EXE SHA-256：
-ea9d367b89aa879fc013fdd790be46e44b89b6c4515f29dc4ebddddf2d0340dd
+38a4d548ff7288b566ac02e8cf9a4517fa9d633b0ed071326fb656641fbf7e6e
 版本不符时安装器会拒绝安装，不要跳过校验。其他平台和游戏版本未适配。
 
 三、文件放哪里
 把 ZIP 完整解压到可写文件夹，例如 D:\Tools\KR6-Live-Control\。
 不用放进游戏目录，不要直接在 ZIP 内双击运行，也不能只拿走 Launch.cmd。
-安装文件、脚本和 systems_wrapper.lua 必须保留在同一文件夹。
+完整保留成品包文件；补丁已内置在安装器中，无需另找 systems_wrapper.lua。
 
 四、第一次安装
 1. 先确认原游戏可以正常运行，然后正常退出游戏。
@@ -40,7 +42,7 @@ ea9d367b89aa879fc013fdd790be46e44b89b6c4515f29dc4ebddddf2d0340dd
 
 安装器读取并校验本机原版 EXE，在游戏目录生成：
 Kingdom Rush Genesis Live V4 Mod.exe
-v4.1 仍沿用这个文件名。原版 EXE 保持不变。
+v4.1.1 仍沿用这个文件名。原版 EXE 保持不变。
 工具目录会生成 manifest.json，记录你自己的游戏路径。
 工具不扫描全盘、不下载游戏，也不从别人电脑上的路径读取游戏。
 
@@ -65,7 +67,7 @@ Steam 普通“开始游戏”通常启动原版，不会自动应用此 MOD。
   例如原来击杀奖励 10 金币，设 1.5 倍后奖励 15。
   只影响之后击杀，不补发以前的钱；卖塔、提前开波等奖励不放大。
   设 1 恢复正常；设 0 不再获得击杀金币。
-  小数金币按游戏原有数值累积，例如 3 × 1.5 = 4.5，画面显示可能取整。
+  小数结果按新版游戏的难度系数及取整规则结算。
   仅当前局有效，换局、重开或重启游戏恢复 1 倍。
 
 英雄经验倍率、主动技能经验倍率和速度设置会保留到后续使用；

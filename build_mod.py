@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(sys.executable).resolve().parent if getattr(sys,'frozen',False) else Path(__file__).resolve().parent
 ASSETS = Path(getattr(sys,'_MEIPASS',ROOT))
-SUPPORTED_SHA256 = 'ea9d367b89aa879fc013fdd790be46e44b89b6c4515f29dc4ebddddf2d0340dd'
+SUPPORTED_SHA256 = '38a4d548ff7288b566ac02e8cf9a4517fa9d633b0ed071326fb656641fbf7e6e'
 GAME = ORIGINAL = MOD = CONFIG = None
 TARGET = 'all/systems.lua'
 ORIGINAL_MEMBER = 'live_mod/original_systems.bin'
@@ -47,9 +47,9 @@ def main():
     CONFIG=GAME/'hero_xp_multiplier.txt'
     if not ORIGINAL.is_file(): raise SystemExit('Game EXE not found in selected folder')
     before=digest(ORIGINAL)
-    if before!=SUPPORTED_SHA256: raise SystemExit('Unsupported game build. This version supports Steam build 25661788 only; original file was not modified.')
+    if before!=SUPPORTED_SHA256: raise SystemExit('Unsupported game build. This version supports Steam build 25752506 only; original file was not modified.')
     if args.check:
-        print('Compatible: original SHA-256 matches supported build 25661788')
+        print('Compatible: original SHA-256 matches supported build 25752506')
         return
     if MOD.exists() and not args.upgrade: raise SystemExit('MOD already exists; use --upgrade after exiting the game to keep a backup and replace it.')
     if shutil.disk_usage(GAME).free < ORIGINAL.stat().st_size + 100_000_000:
@@ -114,8 +114,8 @@ def main():
         'source_sha256':before, 'mod_sha256':digest(MOD), 'native_prefix_bytes':prefix_size,
         'replaced_member':TARGET, 'added_member':ORIGINAL_MEMBER,
         'default_multiplier':1, 'original_unchanged':True, 'zip_crc_check':'PASS',
-        'gameplay_test':'NOT_RUN', 'buildid':'25661788',
-        'mod_version':'4.1', 'previous_mod_backup':str(mod_backup) if mod_backup else None,
+        'gameplay_test':'NOT_RUN', 'buildid':'25752506',
+        'mod_version':'4.1.1', 'previous_mod_backup':str(mod_backup) if mod_backup else None,
     }
     (ROOT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps(manifest,ensure_ascii=False,indent=2))
