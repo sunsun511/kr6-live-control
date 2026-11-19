@@ -1,0 +1,17 @@
+{
+  "buildid": "26406218",
+  "source_sha256": "eaee606583723968919fa31232fb3cf2cff788c13db9dd8eada300a186e1d4c3",
+  "source_archive_sha256": "00c3994386940d727611f1bebf84c091298559bc44062746e55d6bcc869807b6",
+  "runtime_dll_sha256": {
+    "kdiag.dll": "36fc7dec947a025dad4d2b0f2ab0a755bec2ec5e5003ef60c0ea37d1fa0db411",
+    "khttps.dll": "b687b5325e28f89671a150e4cbfca3b95e4198b6e229bb0de4eb4e0b08503684",
+    "ksystem.dll": "6933bc644d86c0c6c942720444ab3e5a5bb8f628b95b5548e2aac8766cb6dabf",
+    "libcurl-x64.dll": "981c551e2eba1d83f8c9f6654cd91ea9c36f7518112a86aae5d0ff9adc6c7bf3",
+    "love.dll": "71517284b1519e5735d3c6d2775c8638c5faecf5f19bd7d89d045f0d8ba399fa",
+    "lua51.dll": "9c9804d94823a3f5d873c195916d660cecfddad85a00feff5ed5bdc08dd5f106",
+    "mpg123.dll": "3f2aa5dc29c09791c4cb1d9fae29b1d3df0bac671c3333497c58c8a867d4d0b9",
+    "OpenAL32.dll": "2f7f183ef63f159d381ae8f6fd8e42a44a3dd3fced0122f96c79c2ad5e7c9ea0",
+    "SDL2.dll": "9723f7f44d7a3e8a8308582bbe9ea2a45fedfb3210cafb12820546e0cdb95e4c",
+    "steam_api.dll": "9d6d2972c1571a2a058d79a8376e26a33d33813f29d93c3ca6e35adaddcd56de"
+  }
+}

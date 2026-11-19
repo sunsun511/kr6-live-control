@@ -4,7 +4,7 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 $manifest = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $form = New-Object System.Windows.Forms.Form
-$form.Text = '王国保卫战：实时控制 v4.1.1'
+$form.Text = ("王国保卫战：实时控制 v{0}（Build {1}）" -f $manifest.mod_version, $manifest.buildid)
 $form.Size = New-Object System.Drawing.Size(650,910)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
@@ -73,6 +73,12 @@ $launch=Button '启动新版 MOD' 180 735 142 {
         if (Test-GameRunning) {[System.Windows.Forms.MessageBox]::Show('请先正常退出正在运行的游戏，再启动 MOD。','游戏正在运行');return}
         $currentHash=(Get-FileHash -LiteralPath $manifest.original_exe -Algorithm SHA256).Hash
         if ($currentHash -ne $manifest.source_sha256) {throw 'Steam 中的游戏已更新。请先重新适配 MOD，再启动。'}
+        if ((Get-FileHash -LiteralPath $manifest.source_archive -Algorithm SHA256).Hash -ne $manifest.source_archive_sha256) {throw 'Steam 游戏资源包已更新，请重新适配。'}
+        if ((Get-FileHash -LiteralPath $manifest.mod_archive -Algorithm SHA256).Hash -ne $manifest.mod_archive_sha256) {throw '修改器资源包校验失败，请勿启动。'}
+        if ((Get-FileHash -LiteralPath $manifest.mod_exe -Algorithm SHA256).Hash -ne $manifest.mod_sha256) {throw '修改器启动程序校验失败。'}
+        foreach ($dll in $manifest.runtime_dll_sha256.PSObject.Properties) {
+            if ((Get-FileHash -LiteralPath (Join-Path $manifest.game_dir $dll.Name) -Algorithm SHA256).Hash -ne $dll.Value) {throw "修改器运行库校验失败：$($dll.Name)"}
+        }
         Save-Multiplier
         if (Test-Path -LiteralPath $manifest.save_dir) {
             $backup=Join-Path $PSScriptRoot ('save_backups\launch_'+(Get-Date -Format 'yyyyMMdd_HHmmss_fff'))
@@ -94,7 +100,7 @@ $launch=Button '启动新版 MOD' 180 735 142 {
 $vanilla=Button '启动原版' 340 735 140 {
     try {
         if (Test-GameRunning) {[System.Windows.Forms.MessageBox]::Show('请先退出正在运行的游戏。','提示');return}
-        Start-Process -FilePath $manifest.original_exe -WorkingDirectory $manifest.game_dir -WindowStyle Normal
+        Start-Process -FilePath $manifest.original_exe -WorkingDirectory $manifest.original_game_dir -WindowStyle Normal
     } catch {[System.Windows.Forms.MessageBox]::Show($_.Exception.Message,'无法启动')}
 }
 
@@ -177,6 +183,18 @@ $timer=New-Object System.Windows.Forms.Timer
 $timer.Interval=500
 $timer.Add_Tick({
     try {
+        $games = @(Get-Process -Name 'Kingdom Rush Genesis*' -ErrorAction SilentlyContinue)
+        $connectedProcess = @($games | Where-Object { $_.Path -eq $manifest.mod_exe }).Count -gt 0
+        $vanillaRunning = @($games | Where-Object { $_.Path -eq $manifest.original_exe }).Count -gt 0
+        foreach ($button in @($save,$speedApply,$powerApply)) { $button.Enabled = $connectedProcess }
+        if (-not $connectedProcess) {
+            $script:liveState=$null
+            Clear-LiveIndicators
+            $goldResult.Text=''
+            if ($vanillaRunning) { $status.Text='当前运行 Steam 原版。保存退出后，点击「启动新版 MOD」。' }
+            else { $status.Text='请点击「启动新版 MOD」，进入关卡后可调倍率。' }
+            return
+        }
         $path=Join-Path $manifest.game_dir 'live_mod_v4_status.txt'
         $s=@{}
         foreach($line in [System.IO.File]::ReadAllLines($path)) {
@@ -204,7 +222,7 @@ $timer.Add_Tick({
         $currentHero.Text='英雄经验　'+$s.xp+'×'
         $currentPower.Text='技能经验　'+$s.power_xp+'×'
         $currentSpeed.Text='游戏速度　'+$s.speed+'×'
-        $status.Text='已连接 · 下方为当前已生效的倍率'
+        $status.Text='已连接 MOD 关卡 · 下方显示游戏回传的倍率'
         if ([decimal]::Parse($s.xp,[Globalization.CultureInfo]::InvariantCulture) -ne $script:desiredXp) {$status.Text='已连接 · 新英雄经验倍率等待生效'}
         if ($s.error) {$status.Text='游戏回传错误：'+$s.error}
         if ($script:pendingGold -and $s.ack -eq $script:pendingGold) {

@@ -3,8 +3,8 @@ from pathlib import Path
 from lua_runtime import LuaRuntime, lua_bytes
 
 root=Path(__file__).resolve().parent
-game=Path(os.environ.get('KR6_GAME_DIR') or json.loads((root/'manifest.json').read_text('utf-8'))['game_dir'])
-with zipfile.ZipFile(game/'Kingdom Rush Genesis.exe') as z:
+game=Path(os.environ.get('KR6_GAME_DIR') or json.loads((root/'manifest.json').read_text('utf-8'))['original_game_dir'])
+with zipfile.ZipFile(game/'main.kra') as z:
     gs=z.read('kr6/game_settings.lua')
     su=z.read('all/script_utils.lua')
     km=z.read('lib/klua/macros.lua')
@@ -27,7 +27,7 @@ end
 env.require=function(n)if n=='klove.simulation' then return {update=function()end} end;assert(n=='game_settings');return GS end
 local now=1;local fs={};local prefix='C:/test-game/'
 env.love={timer={getTime=function()return now end},filesystem={getSourceBaseDirectory=function()return 'C:/test-game' end,read=function()
- return 'return {level={init=function(self,s)s.player_gold=100 end,on_update=function(self,dt,ts,s)s.ticks=(s.ticks or 0)+1;return 42 end,destroy=function()return 7 end}}'
+ return 'return {health={on_update=function()end},level={init=function(self,s)s.player_gold=100 end,on_update=function(self,dt,ts,s)s.ticks=(s.ticks or 0)+1;return 42 end,destroy=function()return 7 end}}'
 end}}
 env.io={open=function(path,mode)
  if mode=='r'then if not fs[path]then return nil end;return {read=function()return fs[path]end,close=function()end}end

@@ -12,6 +12,27 @@ local serial=0
 local speed=1
 local bounty_multiplier,bounty_ack=1,'none'
 local simulation=require('klove.simulation')
+
+-- Validate the actual updated game's interfaces before installing hooks.
+assert(type(GS.hero_xp_gain_per_difficulty_mode)=='table','hero XP interface changed')
+assert(type(GS.power_xp_multipliers_per_mode)=='table','power XP interface changed')
+assert(type(GS.gold_enemy_factor_per_mode)=='table','gold interface changed')
+assert(type(systems.level.init)=='function','level.init changed')
+assert(type(systems.level.on_update)=='function','level.on_update changed')
+assert(type(systems.level.destroy)=='function','level.destroy changed')
+assert(type(systems.health.on_update)=='function','health.on_update changed')
+assert(type(simulation.update)=='function','simulation.update changed')
+if os.getenv('KR6_COMPAT_PROBE')=='1' then
+ local out=assert(io.open(root..'compatibility_probe.txt','w'))
+ out:write('PASS: actual Build 26406218 modules loaded; all 8 required interfaces present.\n')
+ for _,name in ipairs({'hero_xp_gain_per_difficulty_mode','power_xp_multipliers_per_mode','gold_enemy_factor_per_mode'}) do
+  for k,v in pairs(GS[name]) do assert(type(v)=='number');out:write(name,'[',tostring(k),']=',tostring(v),'\n') end
+ end
+ out:close()
+ os.exit(0)
+end
+
+
 local function read(name)
     local f=io.open(root..name,'r'); if not f then return nil end
     local s=f:read('*a'); f:close(); return s

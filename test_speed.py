@@ -2,7 +2,7 @@ import json,zipfile
 from pathlib import Path
 import test_live as t
 from lua_runtime import LuaRuntime,lua_bytes
-with zipfile.ZipFile(t.game/'Kingdom Rush Genesis.exe') as z: raw=z.read('lib/klove/simulation.lua')
+with zipfile.ZipFile(t.game/'main.kra') as z: raw=z.read('lib/klove/simulation.lua')
 s=t.script
 s=s.replace("env.require=function(n)if n=='klove.simulation' then return {update=function()end} end;assert(n=='game_settings');return GS end", "local sf=assert(loadstring("+lua_bytes(raw)+"));setfenv(sf,setmetatable({require=function(n)if n=='klua.macros' then return macros end;return dummy end},{__index=_G}));local sim=sf();env.require=function(n)if n=='klove.simulation' then return sim end;assert(n=='game_settings');return GS end")
 s=s[:s.index("return 'PASS:")]+r"""

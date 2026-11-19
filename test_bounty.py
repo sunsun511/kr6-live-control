@@ -3,8 +3,8 @@ import json,zipfile,os
 from pathlib import Path
 from lua_runtime import LuaRuntime,lua_bytes
 root=Path(__file__).resolve().parent
-game=Path(os.environ.get('KR6_GAME_DIR') or json.loads((root/'manifest.json').read_text('utf-8'))['game_dir'])
-with zipfile.ZipFile(game/'Kingdom Rush Genesis.exe') as z:
+game=Path(os.environ.get('KR6_GAME_DIR') or json.loads((root/'manifest.json').read_text('utf-8'))['original_game_dir'])
+with zipfile.ZipFile(game/'main.kra') as z:
     raw=z.read('all/systems.lua'); macros=z.read('lib/klua/macros.lua'); settings=z.read('kr6/game_settings.lua')
 script=r'''
 local real_require=require

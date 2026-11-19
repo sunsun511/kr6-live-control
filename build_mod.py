@@ -7,12 +7,14 @@ import shutil
 import zipfile
 import sys
 import subprocess
+import os
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(sys.executable).resolve().parent if getattr(sys,'frozen',False) else Path(__file__).resolve().parent
 ASSETS = Path(getattr(sys,'_MEIPASS',ROOT))
-SUPPORTED_SHA256 = '38a4d548ff7288b566ac02e8cf9a4517fa9d633b0ed071326fb656641fbf7e6e'
+SUPPORTED_SHA256 = json.loads((ASSETS/'supported.json').read_text())['source_sha256']
 GAME = ORIGINAL = MOD = CONFIG = None
 TARGET = 'all/systems.lua'
 ORIGINAL_MEMBER = 'live_mod/original_systems.bin'
@@ -27,7 +29,6 @@ def wrapper():
     return (ASSETS/'systems_wrapper.lua').read_bytes()
 
 def main():
-    global GAME, ORIGINAL, MOD, CONFIG
     if len(sys.argv)==1 and getattr(sys,'frozen',False):
         script=ROOT/'Install.ps1'
         if not script.exists():raise SystemExit('Please extract the entire ZIP first: Install.ps1 is missing.')
@@ -41,83 +42,51 @@ def main():
     parser.add_argument('--check',action='store_true',help='Validate game compatibility without installing')
     parser.add_argument('--upgrade',action='store_true',help='Replace the existing MOD after validation, retaining a local backup; exit the game first')
     args=parser.parse_args()
-    GAME=args.game_dir.resolve()
-    ORIGINAL=GAME/'Kingdom Rush Genesis.exe'
-    MOD=GAME/'Kingdom Rush Genesis Live V4 Mod.exe'
-    CONFIG=GAME/'hero_xp_multiplier.txt'
-    if not ORIGINAL.is_file(): raise SystemExit('Game EXE not found in selected folder')
-    before=digest(ORIGINAL)
-    if before!=SUPPORTED_SHA256: raise SystemExit('Unsupported game build. This version supports Steam build 25752506 only; original file was not modified.')
+    game = args.game_dir.resolve()
+    spec = json.loads((ASSETS/'supported.json').read_text())
+    exe = game/'Kingdom Rush Genesis.exe'
+    archive = game/'main.kra'
+    sources = {exe: spec['source_sha256'], archive: spec['source_archive_sha256']}
+    sources.update({game/name: value for name,value in spec['runtime_dll_sha256'].items()})
+    for path, expected in sources.items():
+        if not path.is_file() or digest(path) != expected:
+            raise SystemExit(f"Unsupported or changed file: {path.name}. Expected Steam build {spec['buildid']}.")
     if args.check:
-        print('Compatible: original SHA-256 matches supported build 25752506')
+        print('Compatible:',spec['buildid'])
         return
-    if MOD.exists() and not args.upgrade: raise SystemExit('MOD already exists; use --upgrade after exiting the game to keep a backup and replace it.')
-    if shutil.disk_usage(GAME).free < ORIGINAL.stat().st_size + 100_000_000:
-        raise SystemExit('Not enough disk space for a separate mod executable')
-    temp = GAME / 'Kingdom Rush Genesis Live V4 Mod.exe.building'
-    if temp.exists(): raise SystemExit('Staging file already exists; inspect before retrying')
-    patch = wrapper()
-    assert patch
-    with zipfile.ZipFile(ORIGINAL) as source:
-        entries = sorted(source.infolist(), key=lambda e: e.header_offset)
-        prefix_size = entries[0].header_offset
-        payload = source.read(TARGET)
-        assert payload.startswith(b'\x1bLJ'), 'Expected LuaJIT systems'
-        with ORIGINAL.open('rb') as inp, temp.open('wb') as out:
-            out.write(inp.read(prefix_size))
-        # Copy compressed local-file records unchanged, then rebuild central directory.
-        with ORIGINAL.open('rb') as inp, zipfile.ZipFile(temp, 'a', compression=zipfile.ZIP_DEFLATED) as out:
-            for i, entry in enumerate(entries):
-                if entry.filename == TARGET: continue
-                end = entries[i+1].header_offset if i+1<len(entries) else source.start_dir
-                new = copy.copy(entry)
-                new.header_offset = out.fp.tell()
-                inp.seek(entry.header_offset)
-                remaining = end-entry.header_offset
-                while remaining:
-                    data = inp.read(min(4*1024*1024, remaining))
-                    if not data: raise IOError('Unexpected EOF')
-                    out.fp.write(data); remaining -= len(data)
-                out.filelist.append(new); out.NameToInfo[new.filename] = new
-                out.start_dir = out.fp.tell(); out._didModify = True
-            out.writestr(ORIGINAL_MEMBER, payload)
-            out.writestr(TARGET, patch)
-    with zipfile.ZipFile(temp) as z, zipfile.ZipFile(ORIGINAL) as original:
-        assert len(z.namelist()) == len(set(z.namelist()))
-        assert set(z.namelist()) == set(original.namelist()) | {ORIGINAL_MEMBER}
-        assert z.read(TARGET) == patch and z.read(ORIGINAL_MEMBER) == original.read(TARGET)
-        for info in original.infolist():
-            if info.filename != TARGET:
-                other = z.getinfo(info.filename)
-                assert (info.CRC, info.file_size, info.compress_size) == (other.CRC, other.file_size, other.compress_size)
-        bad = z.testzip()
-        assert bad is None, f'CRC failed: {bad}'
-    with ORIGINAL.open('rb') as a, temp.open('rb') as b:
-        assert a.read(prefix_size) == b.read(prefix_size)
-    assert before == digest(ORIGINAL), 'Original file changed during build'
-    if not CONFIG.exists(): CONFIG.write_text('1\n', encoding='ascii')
-    mod_backup=None
-    if MOD.exists():
-        backup=ROOT/'mod_backups'/datetime.now().strftime('%Y%m%d_%H%M%S_%f')
-        backup.mkdir(parents=True)
-        mod_backup=backup/MOD.name
-        shutil.copy2(MOD,mod_backup)
-        assert digest(mod_backup)==digest(MOD),'Existing MOD backup mismatch'
-        if (ROOT/'manifest.json').exists():shutil.copy2(ROOT/'manifest.json',backup/'manifest.json')
-    temp.replace(MOD)
-    save_dir = Path.home()/'AppData/Roaming/kingdom_rush_genesis'
-    snapshot = ROOT/'save_backups'/('before_mod_'+datetime.now().strftime('%Y%m%d_%H%M%S'))
-    if save_dir.exists(): shutil.copytree(save_dir, snapshot)
-    manifest = {
-        'game_dir':str(GAME), 'original_exe':str(ORIGINAL), 'mod_exe':str(MOD),
-        'config':str(CONFIG), 'save_dir':str(save_dir), 'initial_save_backup':str(snapshot),
-        'source_sha256':before, 'mod_sha256':digest(MOD), 'native_prefix_bytes':prefix_size,
-        'replaced_member':TARGET, 'added_member':ORIGINAL_MEMBER,
-        'default_multiplier':1, 'original_unchanged':True, 'zip_crc_check':'PASS',
-        'gameplay_test':'NOT_RUN', 'buildid':'25752506',
-        'mod_version':'4.1.1', 'previous_mod_backup':str(mod_backup) if mod_backup else None,
-    }
-    (ROOT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
-    print(json.dumps(manifest,ensure_ascii=False,indent=2))
+    if shutil.disk_usage(ROOT).free < archive.stat().st_size + 150_000_000:
+        raise SystemExit('Insufficient disk space in the extracted mod folder.')
+    runtime = Path(tempfile.mkdtemp(prefix='runtime_'+spec['buildid']+'_',dir=ROOT))
+    try:
+        mod = runtime/'Kingdom Rush Genesis Live.exe'
+        shutil.copy2(exe,mod)
+        for name in spec['runtime_dll_sha256']:
+            shutil.copy2(game/name,runtime/name)
+        patched = runtime/'main.kra'
+        overrides={'all/systems.lua':('systems_wrapper.lua','live_mod/original_systems.bin'),
+                   'main.lua':('bootstrap.lua','live_mod/original_main.bin')}
+        with zipfile.ZipFile(archive) as src, zipfile.ZipFile(patched,'w') as dst:
+            for entry in src.infolist():
+                data=src.read(entry)
+                if entry.filename in overrides:
+                    script,original=overrides[entry.filename]
+                    dst.writestr(original,data,compress_type=zipfile.ZIP_DEFLATED)
+                    data=(ASSETS/script).read_bytes()
+                dst.writestr(copy.copy(entry),data)
+        with zipfile.ZipFile(patched) as src:
+            if src.testzip() is not None: raise ValueError('Archive verification failed')
+        for name in ['hero_xp_multiplier.txt','live_mod_power_xp.txt','live_mod_speed.txt']:
+            (runtime/name).write_text('1',encoding='ascii')
+        manifest=dict(spec,mod_version='4.2.1',game_dir=str(runtime),original_game_dir=str(game),
+            original_exe=str(exe),source_archive=str(archive),mod_exe=str(mod),mod_sha256=digest(mod),
+            mod_archive=str(patched),mod_archive_sha256=digest(patched),config=str(runtime/'hero_xp_multiplier.txt'),
+            save_dir=str(Path(os.environ['APPDATA'])/'kingdom_rush_genesis'))
+        tmp=runtime/'manifest.ready'
+        tmp.write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
+        os.replace(tmp,ROOT/'manifest.json')
+    except BaseException:
+        shutil.rmtree(runtime)
+        raise
+    print('Installed. Open Launch.cmd.')
 
-if __name__ == '__main__': main()
+if __name__=='__main__': main()

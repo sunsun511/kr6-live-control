@@ -1,7 +1,7 @@
 import json,zipfile
 import test_live as t
 from lua_runtime import LuaRuntime,lua_bytes
-with zipfile.ZipFile(t.game/'Kingdom Rush Genesis.exe') as z:
+with zipfile.ZipFile(t.game/'main.kra') as z:
     systems=z.read('all/systems.lua');utils=z.read('all/utils.lua')
 insert="""
 local rawsys=assert(env.loadstring(SYSTEMS))()
